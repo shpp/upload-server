@@ -22,7 +22,7 @@ type Session struct {
 
 	// Offset is the current offset in bytes that
 	// represents the amount of data written
-	Offset int64
+	offset int64
 
 	// path is a directory where where chunks
 	// for an upload session are stored
@@ -39,6 +39,15 @@ func NewSession(storagepath string) *Session {
 // ID returns the id of current upload session.
 func (s *Session) ID() string {
 	return s.id
+}
+
+func (s *Session) Offset() int64 {
+	return s.offset
+}
+
+// OffsetStr returns string representation of Offset.
+func (s *Session) OffsetStr() string {
+	return fmt.Sprintf("%d", s.offset)
 }
 
 // Init assings id, start/end time of a session and
@@ -61,9 +70,9 @@ func (s *Session) Expired() bool {
 }
 
 // Put writes a file chunk to disk in a separate file.
-func (s *Session) Put(chunk []byte) error {
-	tmppath := path.Join(s.path, fmt.Sprintf("%d.tmp", s.Offset))
-	chunkpath := path.Join(s.path, fmt.Sprintf("%d.chunk", s.Offset))
+func (s *Session) Put(chunk io.Reader) error {
+	tmppath := path.Join(s.path, fmt.Sprintf("%d.tmp", s.offset))
+	chunkpath := path.Join(s.path, fmt.Sprintf("%d.chunk", s.offset))
 
 	if err := s.write(tmppath, chunk); err != nil {
 		return err
@@ -112,16 +121,16 @@ func (s *Session) cleanup() error {
 	return os.RemoveAll(s.path)
 }
 
-func (s *Session) write(fpath string, data []byte) error {
+func (s *Session) write(fpath string, data io.Reader) error {
 	if file, err := os.Create(fpath); err != nil {
 		return err
 	} else {
 		defer file.Close()
 
-		if n, err := file.Write(data); err != nil {
+		if n, err := io.Copy(file, data); err != nil {
 			return err
 		} else {
-			s.Offset += int64(n)
+			s.offset += int64(n)
 			log.Printf("[Session %s] %d bytes written\n", s.id, n)
 		}
 	}

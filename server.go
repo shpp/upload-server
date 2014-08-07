@@ -67,18 +67,21 @@ func sendHttpResponse(rw http.ResponseWriter, response HttpResp) {
 
 func handleFilePut(rw http.ResponseWriter, req *http.Request, p httprouter.Params) {
 	id, offset := p.ByName("id"), p.ByName("offset")
-	var sess *upload.Session
+	var (
+		sess *upload.Session
+		err  error
+	)
 	defer req.Body.Close()
 
 	if id == "0" {
-		sess, err := Uploader.AddSession()
+		sess, err = Uploader.AddSession()
 
 		if err != nil {
 			log.Println("Session add:", err)
 			sendHttpResponse(rw, HttpResp{code: http.StatusInternalServerError})
 			return
 		}
-		if err := sess.Put(req.Body); err != nil {
+		if err = sess.Put(req.Body); err != nil {
 			log.Println("Put:", err)
 			sendHttpResponse(rw, HttpResp{
 				code:   http.StatusInternalServerError,
@@ -102,7 +105,7 @@ func handleFilePut(rw http.ResponseWriter, req *http.Request, p httprouter.Param
 			})
 			return
 		}
-		if err := sess.Put(req.Body); err != nil {
+		if err = sess.Put(req.Body); err != nil {
 			log.Println("Put:", err)
 			sendHttpResponse(rw, HttpResp{code: http.StatusInternalServerError})
 			return
@@ -130,6 +133,8 @@ func handleCommit(rw http.ResponseWriter, req *http.Request, p httprouter.Params
 		log.Println("Commit:", err)
 		sendHttpResponse(rw, HttpResp{code: http.StatusInternalServerError})
 	} else {
+		Uploader.CleanupSession(sess.ID())
+
 		sendHttpResponse(rw, HttpResp{
 			code:  http.StatusOK,
 			ID:    sess.ID(),

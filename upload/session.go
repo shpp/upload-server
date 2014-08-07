@@ -3,7 +3,6 @@ package upload
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
 	"time"
@@ -131,7 +130,6 @@ func (s *Session) write(fpath string, data io.Reader) error {
 			return err
 		} else {
 			s.offset += int64(n)
-			log.Printf("[Session %s] %d bytes written\n", s.id, n)
 		}
 	}
 	return nil

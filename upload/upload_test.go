@@ -44,6 +44,7 @@ func TestUpload(t *testing.T) {
 	if err := sess.Commit(fpath); err != nil {
 		t.Fatal("Failed to commit upload", err)
 	}
+	uploader.CleanupSession(sess.id)
 	os.Remove(fpath)
 }
 

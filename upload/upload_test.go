@@ -1,7 +1,9 @@
 package upload
 
 import (
+	"bytes"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 )
@@ -16,12 +18,15 @@ var (
 )
 
 func TestUpload(t *testing.T) {
-	sess := uploader.AddSession()
+	sess, err := uploader.AddSession()
+
+	if err != nil {
+		t.Fatal("Failed to add session", err)
+	}
 	data := make([]byte, Gig)
 	start, end := 0, chunkSize
 
 	randomBytes(data)
-	sess.Init()
 
 	for end != len(data) {
 		if end = start + chunkSize; end > len(data) {
@@ -30,14 +35,16 @@ func TestUpload(t *testing.T) {
 		chunk := data[start:end]
 		start += chunkSize
 
-		if err := sess.Put(chunk); err != nil {
+		if err := sess.Put(bytes.NewReader(chunk)); err != nil {
 			t.Fatal("Failed to upload chunk", err)
 		}
 	}
+	fpath := "./randomfile.txt"
 
-	if err := sess.Commit("./randomfile.txt"); err != nil {
+	if err := sess.Commit(fpath); err != nil {
 		t.Fatal("Failed to commit upload", err)
 	}
+	os.Remove(fpath)
 }
 
 func randomBytes(p []byte) {

@@ -101,11 +101,14 @@ func (s *Session) Commit(filepath string) error {
 			}
 		}
 	}
+	if err := s.cleanup(); err != nil {
+		return err
+	}
 	return nil
 }
 
-// Cleanup removes all files and directories associated with a session
-func (s *Session) Cleanup() error {
+// cleanup removes all files and directories associated with a session
+func (s *Session) cleanup() error {
 	return os.RemoveAll(s.path)
 }
 

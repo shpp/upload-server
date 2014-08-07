@@ -38,9 +38,6 @@ func TestUpload(t *testing.T) {
 	if err := sess.Commit("./randomfile.txt"); err != nil {
 		t.Fatal("Failed to commit upload", err)
 	}
-	if err := sess.Cleanup(); err != nil {
-		t.Fatal("Failed to cleanup session", err)
-	}
 }
 
 func randomBytes(p []byte) {

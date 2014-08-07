@@ -9,22 +9,30 @@ func NewUploader(dir string) *Uploader {
 	return &Uploader{contentpath: dir}
 }
 
+func (u *Uploader) Path() string {
+	return u.contentpath
+}
+
 // Session returns a session associated with id.
 func (u *Uploader) Session(id string) *Session {
 	_, sess := u.findSession(id)
 	return sess
 }
 
-// AddSession creates a new upload session and adds
-// it to sessions list.
-func (u *Uploader) AddSession() *Session {
+// AddSession creates a new upload session, initializes it
+// and adds it to sessions list if no error occurred.
+func (u *Uploader) AddSession() (*Session, error) {
 	sess := NewSession(u.contentpath)
+
+	if err := sess.Init(); err != nil {
+		return nil, err
+	}
 	u.sessions = append(u.sessions, sess)
-	return sess
+	return sess, nil
 }
 
 func (u *Uploader) CleanupSession(id string) {
-	i, sess := u.findSession(id)
+	i, _ := u.findSession(id)
 
 	if i >= 0 {
 		u.sessions[i] = u.sessions[len(u.sessions)-1]

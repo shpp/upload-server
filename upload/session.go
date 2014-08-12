@@ -87,12 +87,7 @@ func (s *Session) Put(chunk io.Reader) error {
 // Commit finishes an upload session by combining all its chunk into
 // final destination file.
 func (s *Session) Commit(filepath string) error {
-	if file, err := os.Create(filepath); err != nil {
-		return err
-	} else {
-		file.Close()
-	}
-	dst, err := os.OpenFile(filepath, os.O_APPEND|os.O_WRONLY, 0755)
+	dst, err := os.OpenFile(filepath, os.O_CREATE|os.O_TRUNC|os.O_APPEND|os.O_WRONLY, 0755)
 
 	if err != nil {
 		return err

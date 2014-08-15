@@ -23,18 +23,23 @@ type HttpResp struct {
 }
 
 func main() {
-	router := httprouter.New()
 	content_path := flag.String("content-path", ".", "Path to storage directory")
 	port := flag.String("port", "19502", "Server port")
-	Uploader = upload.NewUploader(*content_path)
 
 	flag.Parse()
+
+	startServer(*port, *content_path)
+}
+
+func startServer(port, content_path string) {
+	router := httprouter.New()
+	Uploader = upload.NewUploader(content_path)
 
 	router.PUT("/upload/:id/:offset", handleFilePut)
 	router.POST("/upload/:id/:name", handleCommit)
 
-	log.Println("Listening on port", *port)
-	log.Fatalln(http.ListenAndServe(":"+*port, router))
+	log.Println("Listening on port", port)
+	log.Fatalln(http.ListenAndServe(":"+port, router))
 }
 
 func encodeResponse(response HttpResp) ([]byte, error) {
@@ -81,7 +86,7 @@ func handleFilePut(rw http.ResponseWriter, req *http.Request, p httprouter.Param
 			sendHttpResponse(rw, HttpResp{code: http.StatusInternalServerError})
 			return
 		}
-		log.Println("Session %s started\n", sess.ID())
+		log.Printf("Session %s started\n", sess.ID())
 
 		if err = sess.Put(req.Body); err != nil {
 			log.Println("Put:", err)
@@ -136,7 +141,7 @@ func handleCommit(rw http.ResponseWriter, req *http.Request, p httprouter.Params
 		sendHttpResponse(rw, HttpResp{code: http.StatusInternalServerError})
 	} else {
 		Uploader.CleanupSession(sess.ID())
-		log.Printf("Session %s committed\n", sess.ID())
+		log.Printf("Session %s closed\n", sess.ID())
 
 		sendHttpResponse(rw, HttpResp{
 			code:  http.StatusOK,

@@ -28,7 +28,7 @@ type ServerResp struct {
 }
 
 func TestUpload(t *testing.T) {
-	go startServer(serverPort, "./content/files")
+	go startServer(serverPort, ".")
 
 	data := make([]byte, halfGig)
 	start, end, size := 0, chunkSize, len(data)
